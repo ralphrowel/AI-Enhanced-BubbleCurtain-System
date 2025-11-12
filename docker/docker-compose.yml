@@ -1,8 +1,7 @@
-
 services:
   db:
     image: postgres:15
-    container_name: postgres_db
+    container_name: bubblecurtain_db
     env_file:
       - .env
     volumes:
@@ -14,11 +13,12 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    container_name: django_web
+    container_name: bubblecurtain_web
     env_file:
       - .env
     command: >
       sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ..:/app
