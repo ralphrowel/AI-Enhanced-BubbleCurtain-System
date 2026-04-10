@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-em0v#srla_%v_ncot59%ln-%zq*sg5ar1xgjoyrc2tb=qdoynw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -83,14 +83,14 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'postgres_learning'),
-        'USER': os.getenv('POSTGRES_USER', 'postgres'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-        'HOST': 'db', 
-        'PORT': '5432',
-    }
+"default": {
+"ENGINE": "django.db.backends.postgresql",
+"NAME": os.getenv("POSTGRES_DB", "postgres"),
+"USER": os.getenv("POSTGRES_USER", "postgres"),
+"PASSWORD": os.getenv("POSTGRES_PASSWORD", "postgres"),
+"HOST": os.getenv("POSTGRES_HOST", "db"),
+"PORT": os.getenv("POSTGRES_PORT", "5432"),
+}
 }
 
 
