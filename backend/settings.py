@@ -33,6 +33,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "mediafiles"
+
+
 
 # Application definition
 
@@ -48,6 +52,7 @@ INSTALLED_APPS = [
     "accounts",
     "api",  
     "core",
+    "imaging",
 ]
 
 MIDDLEWARE = [
@@ -175,12 +180,12 @@ JAZZMIN_SETTINGS = {
 
     # Table icons per model
     "icons": {
-        "accounts.Users": "fas fa-users",
-        "accounts.RawImage": "fas fa-camera",
-        "accounts.ClassificationResult": "fas fa-robot",
-        "accounts.Sensor": "fas fa-microchip",
-        "accounts.SensorReading": "fas fa-chart-line",
-        "accounts.SystemLog": "fas fa-clipboard-list",
+        "accounts.CustomUser": "fas fa-users",
+        "api.Device": "fas fa-microchip",
+        "api.Signal": "fas fa-chart-line",
+        "imaging.RawImage": "fas fa-camera",
+        "imaging.ClassificationResult": "fas fa-robot",
+
     },
 
     # UI tweaks

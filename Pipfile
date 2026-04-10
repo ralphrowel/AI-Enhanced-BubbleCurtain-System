@@ -14,6 +14,7 @@ django-cors-headers = "*"
 gunicorn = "*"
 whitenoise = "*"
 django-jazzmin = "*"
+Pillow = "*"
 
 [dev-packages]
 jupyter = "*"
