@@ -25,10 +25,11 @@ services:
       "
     volumes:
       - ..:/app
+      - ../mediafiles:/app/mediafiles  # ← correct place, under web service
     ports:
       - "8000:8000"
     depends_on:
       - db
 
 volumes:
-  postgres_data:
+  postgres_data: 
