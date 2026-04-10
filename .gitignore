@@ -3,6 +3,28 @@ __pycache__/
 .env
 db.sqlite3
 venv/
+env/
 .Pipfile.lock
 .DS_Store
 docker/postgres_data/
+venv_notebook/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Django collected static files
+staticfiles/
+
+# Media uploads
+media/
+
+# Python egg info
+*.egg-info/
+dist/
+
+# Windows OS files
+Thumbs.db
+
+# VS Code / editor settings
+.vscode/
+.idea/
