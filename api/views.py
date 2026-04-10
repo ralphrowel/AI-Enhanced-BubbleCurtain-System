@@ -3,6 +3,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Device, Signal
 from .serializers import DeviceSerializer, SignalSerializer
+from django.http import JsonResponse
+
+def status(request):
+    return JsonResponse({"status": "ok"})
 
 class ExampleViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
