@@ -6,6 +6,8 @@ from drf_yasg import openapi
 from core.views import home
 from django.conf import settings
 from django.conf.urls.static import static
+from core.admin_views import ui_settings_view
+
 
 schema_view = get_schema_view(
    openapi.Info(title="API", default_version='v1', description="API docs"),
@@ -14,6 +16,8 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    path("admin/ui-settings/", ui_settings_view, name="admin_ui_settings"),
+
     path("admin/", admin.site.urls),
     path("", home),
     path("accounts/", include("accounts.urls")),

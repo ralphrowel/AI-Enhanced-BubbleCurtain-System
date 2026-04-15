@@ -64,6 +64,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    'core.middleware.JazzminUIMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -162,53 +163,14 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": False,
 }
 
-### JAZZMIN SETTINGS ###
-
-JAZZMIN_SETTINGS = {
-    # Title and branding
-    "site_title": "Bubble Curtain Admin",
-    "site_header": "AI-Enhanced Bubble Curtain System",
-    "site_brand": "BubbleCurtain",
-    "welcome_sign": "Welcome to the Bubble Curtain Monitoring System",
-    "copyright": "AI-Enhanced Bubble Curtain System",
-
-    # Top menu
-    "topmenu_links": [
-        {"name": "Administrator Page", "url": "admin:index"},
-        {"name": "View Site", "url": "/"},
-    ],
-
-    # Table icons per model
-    "icons": {
-        "accounts.CustomUser": "fas fa-users",
-        "api.Device": "fas fa-microchip",
-        "api.Signal": "fas fa-chart-line",
-        "imaging.RawImage": "fas fa-camera",
-        "imaging.ClassificationResult": "fas fa-robot",
-
-    },
-
-    # UI tweaks
-    "show_sidebar": True,
-    "navigation_expanded": True,
-    "hide_apps": [],
-    "hide_models": [],
-}
-
 JAZZMIN_UI_TWEAKS = {
-    "theme": "darkly",         # dark modern theme
-    "dark_mode_theme": "darkly",
-    "navbar": "navbar-dark",
-    "sidebar": "sidebar-dark-primary",
+    "theme": "flatly",
+    "navbar": "navbar-white navbar-light",
+    "sidebar": "sidebar-light-primary",
     "accent": "accent-primary",
-    "button_classes": {
-        "primary": "btn-primary",
-        "secondary": "btn-secondary",
-        "info": "btn-info",
-        "warning": "btn-warning",
-        "danger": "btn-danger",
-        "success": "btn-success",
-    },
+    "navbar_fixed": False,
+    "sidebar_fixed": False,
 }
 
-### JAZZMIN SETTINGS ###
+### COnnector for Jazzmin file
+from backend.jazzmin_settings import JAZZMIN_SETTINGS

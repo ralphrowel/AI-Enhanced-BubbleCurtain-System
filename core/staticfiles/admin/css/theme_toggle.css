@@ -1,0 +1,38 @@
+#theme-toggle-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  transition: opacity 0.2s;
+}
+
+#theme-toggle-btn:hover {
+  opacity: 0.75;
+}
+
+[data-theme="darkly"] body,
+[data-theme="darkly"] .content-wrapper,
+[data-theme="darkly"] .main-sidebar,
+[data-theme="darkly"] .main-header {
+  background-color: #222 !important;
+  color: #fff !important;
+}
+
+[data-theme="darkly"] .card {
+  background-color: #2d2d2d !important;
+  color: #fff !important;
+  border-color: #444 !important;
+}
+
+[data-theme="darkly"] .card-header {
+  background-color: #333 !important;
+  border-color: #444 !important;
+}
+
+/* Dark theme content area fix */
+[data-bs-theme="dark"] .content-wrapper,
+body.dark-mode .content-wrapper {
+  background-color: #1a1a2e !important;
+  color: #fff !important;
+}

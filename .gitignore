@@ -13,7 +13,7 @@ venv_notebook/
 .ipynb_checkpoints/
 
 # Django collected static files
-staticfiles/
+#staticfiles/
 
 # Media uploads
 media/

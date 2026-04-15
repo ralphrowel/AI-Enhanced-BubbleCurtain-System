@@ -1,0 +1,130 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}UI Settings{% endblock %}
+
+{% block content %}
+
+{% block messages %}{% endblock %}
+
+<div class="container-fluid py-4">
+  <h2 class="mb-4"><i class="fas fa-paint-brush"></i> UI Settings</h2>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
+      {{ message }}
+    </div>
+  {% endfor %}
+  <script>
+    setTimeout(function () {
+      const alert = document.getElementById("success-alert");
+      if (alert) {
+        alert.classList.remove("show");
+        alert.classList.add("fade");
+        setTimeout(() => alert.remove(), 500);
+      }
+    }, 5000);
+  </script>
+{% endif %}
+
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <!-- Theme -->
+    <div class="card mb-4">
+      <div class="card-header"><strong><i class="fas fa-palette"></i> Theme</strong></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>Bootstrap Theme</label>
+          <select name="theme" class="form-control">
+            {% for value, label in theme_choices %}
+              <option value="{{ value }}" {% if ui.theme == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navbar -->
+    <div class="card mb-4">
+      <div class="card-header"><strong><i class="fas fa-bars"></i> Navbar</strong></div>
+      <div class="card-body row">
+        <div class="form-group col-md-6">
+          <label>Navbar Style</label>
+          <select name="navbar" class="form-control">
+            {% for value, label in navbar_choices %}
+              <option value="{{ value }}" {% if ui.navbar == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group col-md-6">
+          <label>Brand Colour</label>
+          <select name="brand_colour" class="form-control">
+            {% for value, label in accent_choices %}
+              <option value="navbar-{{ value|cut:'accent-' }}" {% if ui.brand_colour == "navbar-"|add:value|cut:"accent-" %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group col-md-6">
+          <div class="custom-control custom-switch mt-2">
+            <input type="checkbox" class="custom-control-input" id="navbar_fixed" name="navbar_fixed" {% if ui.navbar_fixed %}checked{% endif %}>
+            <label class="custom-control-label" for="navbar_fixed">Fixed Navbar</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="card mb-4">
+      <div class="card-header"><strong><i class="fas fa-columns"></i> Sidebar</strong></div>
+      <div class="card-body row">
+        <div class="form-group col-md-6">
+          <label>Sidebar Style</label>
+          <select name="sidebar" class="form-control">
+            {% for value, label in sidebar_choices %}
+              <option value="{{ value }}" {% if ui.sidebar == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group col-md-6">
+          <label>Accent Color</label>
+          <select name="accent" class="form-control">
+            {% for value, label in accent_choices %}
+              <option value="{{ value }}" {% if ui.accent == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group col-md-6">
+          <div class="custom-control custom-switch mt-2">
+            <input type="checkbox" class="custom-control-input" id="sidebar_fixed" name="sidebar_fixed" {% if ui.sidebar_fixed %}checked{% endif %}>
+            <label class="custom-control-label" for="sidebar_fixed">Fixed Sidebar</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="card mb-4">
+      <div class="card-header"><strong><i class="fas fa-mouse-pointer"></i> Button Colors</strong></div>
+      <div class="card-body row">
+        {% for btn in button_fields %}
+        <div class="form-group col-md-4">
+          <label>{{ btn.name|capfirst }} Button</label>
+          <select name="button_{{ btn.name }}" class="form-control">
+            {% for value, label in button_choices %}
+              <option value="{{ value }}" {% if btn.current == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg">
+      <i class="fas fa-save"></i> Save Settings
+    </button>
+  </form>
+</div>
+{% endblock %}
