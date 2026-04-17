@@ -1,0 +1,72 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static jazzmin %}
+{% get_jazzmin_ui_tweaks as jazzmin_ui %}
+
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+
+{% block content_title %} {% trans 'Dashboard' %} {% endblock %}
+
+{% block breadcrumbs %}
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item">{% trans 'Dashboard' %}</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+    <!-- Capture Station Button -->
+    <div style="margin-bottom: 20px;">
+        <a href="/capture/" class="btn btn-primary btn-lg" style="
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        ">
+            <i class="fas fa-video"></i> Open Capture Station
+        </a>
+    </div>
+
+    {% get_side_menu using="app_list" as dashboard_list %}
+    {% if dashboard_list %}
+        {% widthratio dashboard_list|length 2 1 as middle %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="row">
+                {% for app in dashboard_list %}
+                    <div class="col-lg-6">
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5 class="m-0">{{ app.name }}</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="table table-hover mb-0">
+                                    {% for model in app.models %}
+                                        <tr>
+                                            <td>
+                                                {% if model.url %}<a href="{{ model.url }}">{{ model.name }}</a>{% else %}{{ model.name }}{% endif %}
+                                            </td>
+                                            <td class="text-right" style="white-space: nowrap;">
+                                                {% if model.add_url %}
+                                                    <a href="{{ model.add_url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.success }} addlink">{% trans 'Add' %}</a>
+                                                {% endif %}
+                                                {% if model.url %}
+                                                    {% if model.view_only %}
+                                                        <a href="{{ model.url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.info }} viewlink">{% trans 'View' %}</a>
+                                                    {% else %}
+                                                        <a href="{{ model.url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.info }} changelink">{% if model.custom %}{% trans 'Go' %}{% else %}{% trans 'Change' %}{% endif %}</a>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

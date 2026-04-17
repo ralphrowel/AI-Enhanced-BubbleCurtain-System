@@ -13,6 +13,7 @@ inflection==0.5.1
 packaging==26.0
 pipenv==2026.5.2
 platformdirs==4.9.6
+Pillow
 psycopg2-binary==2.9.11
 PyJWT==2.12.1
 python-decouple==3.8

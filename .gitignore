@@ -28,3 +28,14 @@ Thumbs.db
 # VS Code / editor settings
 .vscode/
 .idea/
+
+# TLS certificates and private keys (never commit secrets)
+*.pem
+cert.pem
+key.pem
+
+# Captured image uploads
+mediafiles/raw_images/
+
+# Claude Code / superpowers local state
+.superpowers/

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Capture Station — BubbleCurtain</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: #0a0f1a;
+            color: #c8d6e5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Back bar */
+        .back-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 8px 16px;
+            background: #080c15;
+            border-bottom: 1px solid #1a2a3a;
+        }
+        .back-bar a {
+            color: #00ccff;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .back-bar a:hover { color: #33ddff; }
+
+        /* Top bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #0f1923;
+            border-bottom: 1px solid #1a2a3a;
+        }
+        .top-bar .title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #00ccff;
+        }
+        .top-bar .badges {
+            display: flex;
+            gap: 8px;
+        }
+        .badge {
+            font-size: 10px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .badge-device { background: #1a3a4a; color: #00ccff; }
+        .badge-status { background: #0a2a1a; color: #00cc66; }
+        .badge-mode { background: #2a1a3a; color: #cc88ff; }
+
+        /* Camera area */
+        .camera-container {
+            flex: 1;
+            position: relative;
+            background: #0a0a14;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            min-height: 300px;
+        }
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        #canvas { display: none; }
+
+        /* Placeholder states */
+        .camera-placeholder {
+            text-align: center;
+            color: #334;
+            padding: 20px;
+        }
+        .camera-placeholder .icon { font-size: 48px; margin-bottom: 12px; }
+        .camera-placeholder p { font-size: 13px; letter-spacing: 1px; }
+        .camera-placeholder .sub { font-size: 11px; color: #445; margin-top: 8px; }
+
+        /* Preview image (for file input mode) */
+        #preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        /* Crosshair overlay */
+        .crosshair {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 64px; height: 64px;
+            border: 2px solid rgba(0, 204, 255, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* Flash effect */
+        .flash {
+            position: absolute;
+            inset: 0;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s;
+        }
+        .flash.active { opacity: 0.7; transition: none; }
+
+        /* Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #0f1923;
+        }
+        .stat-card {
+            background: #1a2a3a;
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #556;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #aab;
+        }
+        .stat-value.ok { color: #00cc66; }
+
+        /* Bottom bar */
+        .bottom-bar {
+            display: flex;
+            gap: 10px;
+            padding: 12px 16px 24px;
+            background: #0f1923;
+            border-top: 1px solid #1a2a3a;
+        }
+        .btn-capture {
+            flex: 1;
+            background: #00ccff;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background 0.15s;
+        }
+        .btn-capture:active { background: #00aadd; }
+        .btn-capture:disabled {
+            background: #1a3a4a;
+            color: #445;
+            cursor: not-allowed;
+        }
+        .btn-switch {
+            width: 48px;
+            background: #1a3a4a;
+            border: none;
+            border-radius: 8px;
+            color: #00ccff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* Device selector */
+        .device-select {
+            padding: 12px 16px;
+            background: #0f1923;
+            border-bottom: 1px solid #1a2a3a;
+        }
+        .device-select select {
+            width: 100%;
+            background: #1a2a3a;
+            color: #c8d6e5;
+            border: 1px solid #2a3a4a;
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 14px;
+            appearance: none;
+            cursor: pointer;
+        }
+        .device-select label {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #556;
+            margin-bottom: 6px;
+        }
+
+        /* Hidden file input */
+        #fileInput { display: none; }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: #00cc66;
+            color: #000;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            pointer-events: none;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.error { background: #ff4444; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <!-- Back bar -->
+    <div class="back-bar">
+        <a href="javascript:history.back()">&larr; Back</a>
+        <a href="/admin/">Admin</a>
+        <a href="/">Home</a>
+    </div>
+
+    <!-- Top bar -->
+    <div class="top-bar">
+        <span class="title">Capture Station</span>
+        <div class="badges">
+            <span class="badge badge-device" id="deviceBadge">No Device</span>
+            <span class="badge badge-status" id="statusBadge">Ready</span>
+            <span class="badge badge-mode" id="modeBadge">--</span>
+        </div>
+    </div>
+
+    <!-- Device selector -->
+    <div class="device-select">
+        <label>Select Device</label>
+        <select id="deviceSelector">
+            <option value="">— Choose a device —</option>
+            {% for device in devices %}
+            <option value="{{ device.id }}" data-name="{{ device.name }}" data-serial="{{ device.serial_number }}">
+                {{ device.name }} ({{ device.serial_number }})
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Camera feed / Preview area -->
+    <div class="camera-container">
+        <video id="video" autoplay playsinline style="display:none"></video>
+        <img id="preview" alt="Preview">
+        <canvas id="canvas"></canvas>
+        <div class="crosshair" id="crosshair"></div>
+        <div class="flash" id="flash"></div>
+
+        <!-- Initial placeholder -->
+        <div class="camera-placeholder" id="placeholderInit">
+            <div class="icon">&#128247;</div>
+            <p>Select a device to start</p>
+        </div>
+
+        <!-- File mode placeholder (hidden by default) -->
+        <div class="camera-placeholder" id="placeholderFile" style="display:none">
+            <div class="icon">&#128247;</div>
+            <p>Tap OPEN CAMERA below</p>
+            <p class="sub">Your phone's camera app will open.<br>Take a photo and it uploads automatically.</p>
+        </div>
+    </div>
+
+    <!-- Hidden file input for native camera fallback -->
+    <input type="file" id="fileInput" accept="image/*" capture="environment">
+
+    <!-- Stats row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Last Capture</div>
+            <div class="stat-value" id="statLastCapture">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">This Session</div>
+            <div class="stat-value" id="statCount">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Camera</div>
+            <div class="stat-value" id="statCamera">Off</div>
+        </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottom-bar">
+        <button class="btn-capture" id="btnCapture" disabled>Capture</button>
+        <button class="btn-switch" id="btnSwitch" title="Switch camera">&#x21c4;</button>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const preview = document.getElementById('preview');
+        const btnCapture = document.getElementById('btnCapture');
+        const btnSwitch = document.getElementById('btnSwitch');
+        const deviceSelector = document.getElementById('deviceSelector');
+        const placeholderInit = document.getElementById('placeholderInit');
+        const placeholderFile = document.getElementById('placeholderFile');
+        const crosshair = document.getElementById('crosshair');
+        const flash = document.getElementById('flash');
+        const toast = document.getElementById('toast');
+        const fileInput = document.getElementById('fileInput');
+        const deviceBadge = document.getElementById('deviceBadge');
+        const modeBadge = document.getElementById('modeBadge');
+        const statLastCapture = document.getElementById('statLastCapture');
+        const statCount = document.getElementById('statCount');
+        const statCamera = document.getElementById('statCamera');
+
+        let stream = null;
+        let sessionCount = 0;
+        let useFrontCamera = false;
+        let mode = null; // 'live' or 'file'
+
+        // Get CSRF token from cookie
+        function getCSRF() {
+            const match = document.cookie.match(/csrftoken=([^;]+)/);
+            return match ? match[1] : '';
+        }
+
+        // Show toast notification
+        function showToast(message, isError) {
+            toast.textContent = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(function() { toast.className = 'toast'; }, 2500);
+        }
+
+        // Upload a blob/file to the server
+        function uploadImage(blob) {
+            var deviceId = deviceSelector.value;
+            if (!deviceId) {
+                showToast('Select a device first', true);
+                return;
+            }
+
+            btnCapture.disabled = true;
+            btnCapture.textContent = 'Uploading...';
+
+            var formData = new FormData();
+            formData.append('device', deviceId);
+            formData.append('image', blob, 'capture_' + Date.now() + '.jpg');
+
+            fetch('/api/capture/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCSRF() },
+                body: formData,
+            })
+            .then(function(resp) {
+                if (resp.ok) {
+                    return resp.json().then(function(data) {
+                        sessionCount++;
+                        statCount.textContent = sessionCount;
+                        statLastCapture.textContent = 'Just now';
+                        showToast('Captured! Image #' + data.raw_image_id, false);
+                    });
+                } else {
+                    return resp.json().catch(function() { return {}; }).then(function(err) {
+                        var msg = err.detail || (err.device && err.device[0]) || 'Upload failed (' + resp.status + ')';
+                        showToast(msg, true);
+                    });
+                }
+            })
+            .catch(function() {
+                showToast('Network error — check connection', true);
+            })
+            .finally(function() {
+                btnCapture.disabled = false;
+                btnCapture.textContent = (mode === 'live') ? 'Capture' : 'Open Camera';
+            });
+        }
+
+        // ── LIVE MODE (getUserMedia) ──
+        function startLiveCamera() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                startFileMode();
+                return;
+            }
+
+            if (stream) stream.getTracks().forEach(function(t) { t.stop(); });
+
+            navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: useFrontCamera ? 'user' : 'environment',
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 },
+                },
+                audio: false,
+            })
+            .then(function(mediaStream) {
+                stream = mediaStream;
+                mode = 'live';
+                video.srcObject = stream;
+                video.style.display = 'block';
+                preview.style.display = 'none';
+                placeholderInit.style.display = 'none';
+                placeholderFile.style.display = 'none';
+                crosshair.style.display = 'block';
+                statCamera.textContent = 'Live';
+                statCamera.classList.add('ok');
+                modeBadge.textContent = 'LIVE';
+                btnCapture.textContent = 'Capture';
+                btnCapture.disabled = false;
+            })
+            .catch(function(err) {
+                console.warn('getUserMedia failed, using native camera:', err.message);
+                startFileMode();
+            });
+        }
+
+        function captureLiveFrame() {
+            if (!stream) return;
+
+            flash.classList.add('active');
+            setTimeout(function() { flash.classList.remove('active'); }, 150);
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+
+            canvas.toBlob(function(blob) {
+                if (blob) uploadImage(blob);
+                else showToast('Failed to capture frame', true);
+            }, 'image/jpeg', 0.85);
+        }
+
+        // ── FILE INPUT MODE (native camera fallback) ──
+        function startFileMode() {
+            mode = 'file';
+            video.style.display = 'none';
+            preview.style.display = 'none';
+            crosshair.style.display = 'none';
+            placeholderInit.style.display = 'none';
+            placeholderFile.style.display = 'block';
+
+            statCamera.textContent = 'Native';
+            statCamera.classList.add('ok');
+            modeBadge.textContent = 'NATIVE';
+            btnCapture.textContent = 'Open Camera';
+            btnCapture.disabled = false;
+        }
+
+        fileInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+
+            // Show preview
+            var url = URL.createObjectURL(file);
+            preview.src = url;
+            preview.style.display = 'block';
+            placeholderFile.style.display = 'none';
+
+            // Upload
+            uploadImage(file);
+
+            // Reset so same file can be re-selected
+            fileInput.value = '';
+        });
+
+        // ── EVENT LISTENERS ──
+        deviceSelector.addEventListener('change', function() {
+            var selected = deviceSelector.selectedOptions[0];
+            if (selected && selected.value) {
+                deviceBadge.textContent = selected.dataset.name;
+                startLiveCamera(); // tries live, falls back to file mode
+            } else {
+                deviceBadge.textContent = 'No Device';
+                btnCapture.disabled = true;
+            }
+        });
+
+        btnCapture.addEventListener('click', function() {
+            if (mode === 'live') {
+                captureLiveFrame();
+            } else {
+                fileInput.click(); // opens native camera app
+            }
+        });
+
+        btnSwitch.addEventListener('click', function() {
+            if (mode === 'live') {
+                useFrontCamera = !useFrontCamera;
+                startLiveCamera();
+            } else {
+                var current = fileInput.getAttribute('capture');
+                fileInput.setAttribute('capture', current === 'environment' ? 'user' : 'environment');
+                showToast('Switched to ' + (current === 'environment' ? 'front' : 'rear') + ' camera', false);
+            }
+        });
+
+        // Spacebar shortcut (desktop)
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space' && !btnCapture.disabled) {
+                e.preventDefault();
+                btnCapture.click();
+            }
+        });
+    </script>
+</body>
+</html>

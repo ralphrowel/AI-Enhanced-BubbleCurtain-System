@@ -12,13 +12,15 @@ JAZZMIN_SETTINGS = {
     "topmenu_links": [
         {"name": "Administrator Page", "url": "admin:index"},
         {"name": "View Site", "url": "/"},
-        {"name": "⚙️ UI Settings", "url": "/admin/ui-settings/"},
+        {"name": "Capture Station", "url": "/capture/"},
+        {"name": "UI Settings", "url": "/admin/ui-settings/"},
     ],
 
     "icons": {
         "accounts.CustomUser": "fas fa-users",
         "api.Device": "fas fa-microchip",
         "api.Signal": "fas fa-chart-line",
+        "api.Sensor": "fas fa-thermometer-half",
         "imaging.RawImage": "fas fa-camera",
         "imaging.ClassificationResult": "fas fa-robot",
     },
@@ -27,6 +29,15 @@ JAZZMIN_SETTINGS = {
     "navigation_expanded": True,
     "hide_apps": [],
     "hide_models": [],
+
+    "custom_links": {
+        "imaging": [{
+            "name": "Capture Station",
+            "url": "/capture/",
+            "icon": "fas fa-video",
+            "permissions": ["accounts.view_customuser"],
+        }],
+    },
 
     "changeform_format": "horizontal_tabs",
     "related_modal_active": True,
