@@ -16,6 +16,7 @@ whitenoise = "*"
 django-jazzmin = "*"
 Pillow = "*"
 
+
 [dev-packages]
 jupyter = "*"
 ipykernel = "*"

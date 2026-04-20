@@ -1,7 +1,5 @@
 # backend/jazzmin_settings.py
 
-# backend/jazzmin_settings.py
-
 JAZZMIN_SETTINGS = {
     "site_title": "Bubble Curtain Admin",
     "site_header": "AI-Enhanced Bubble Curtain System",
@@ -31,18 +29,32 @@ JAZZMIN_SETTINGS = {
     "hide_models": [],
 
     "custom_links": {
-        "imaging": [{
-            "name": "Capture Station",
-            "url": "/capture/",
-            "icon": "fas fa-video",
-            "permissions": ["accounts.view_customuser"],
-        }],
+        "imaging": [
+            {
+                "name": "Capture Station",
+                "url": "/capture/",
+                "icon": "fas fa-video",
+                "permissions": ["accounts.view_customuser"],
+            },
+            {
+                "name": "📡 Broadcast Camera",
+                "url": "/stream/room1/broadcast/",
+                "icon": "fas fa-broadcast-tower",
+                "permissions": ["accounts.view_customuser"],
+            },
+            {
+                "name": "🖥 View Live Stream",
+                "url": "/stream/room1/view/",
+                "icon": "fas fa-desktop",
+                "permissions": ["accounts.view_customuser"],
+            },
+        ],
     },
 
     "changeform_format": "horizontal_tabs",
     "related_modal_active": True,
-    "custom_css": "admin/css/theme_toggle.css",   
-    "custom_js": "admin/js/theme_toggle.js",       
+    "custom_css": "admin/css/theme_toggle.css",
+    "custom_js": "admin/js/theme_toggle.js",
     "use_google_fonts_cdn": True,
     "show_ui_builder": False,
-}                                                  
+}

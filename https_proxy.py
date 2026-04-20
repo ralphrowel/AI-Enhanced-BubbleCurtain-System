@@ -9,8 +9,8 @@ import socketserver
 import sys
 
 DJANGO_HOST = "127.0.0.1"
-DJANGO_PORT = 9000
-LISTEN_PORT = 8000
+DJANGO_PORT = 8000
+LISTEN_PORT = 8443
 
 
 class ProxyHandler(http.server.BaseHTTPRequestHandler):

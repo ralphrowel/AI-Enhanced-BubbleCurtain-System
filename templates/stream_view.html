@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live View — BubbleCurtain</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: #0a0f1a;
+            color: #c8d6e5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: #0f1923;
+            border-bottom: 1px solid #1a2a3a;
+        }
+        .title { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #00ccff; }
+        .status-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #334; display: inline-block; margin-right: 6px;
+            transition: background 0.3s;
+        }
+        .status-dot.live { background: #ff3333; box-shadow: 0 0 8px #ff3333; animation: pulse 1.5s infinite; }
+        .status-dot.connected { background: #00cc66; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+        .status-text { font-size: 12px; font-weight: 600; }
+
+        .camera-container {
+            flex: 1;
+            position: relative;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            max-height: calc(100vh - 160px);
+        }
+        .live-badge {
+            position: absolute;
+            top: 12px; left: 12px;
+            background: rgba(255,51,51,0.9);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .live-badge.show { display: block; }
+
+        .placeholder {
+            text-align: center;
+            color: #334;
+            padding: 40px 20px;
+        }
+        .placeholder .icon { font-size: 64px; margin-bottom: 16px; }
+        .placeholder h2 { font-size: 16px; color: #556; margin-bottom: 8px; }
+        .placeholder p { font-size: 13px; color: #445; line-height: 1.6; }
+        .placeholder .room { color: #00ccff; font-weight: 700; font-size: 18px; margin: 12px 0; }
+
+        .bottom-bar {
+            padding: 12px 20px 20px;
+            background: #0f1923;
+            border-top: 1px solid #1a2a3a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .room-info { font-size: 12px; color: #556; }
+        .room-info span { color: #00ccff; font-weight: 700; }
+        .btn {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .btn-connect { background: #00ccff; color: #000; }
+        .btn-disconnect { background: #ff3333; color: #fff; display: none; }
+        .btn-fs { background: #1a3a4a; color: #00ccff; }
+
+        .log {
+            padding: 6px 20px;
+            background: #080c15;
+            font-size: 11px;
+            color: #445;
+            border-top: 1px solid #1a2a3a;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <span class="title">🖥 Live Viewer</span>
+        <div>
+            <span class="status-dot" id="dot"></span>
+            <span class="status-text" id="statusText">Disconnected</span>
+        </div>
+    </div>
+
+    <div class="camera-container" id="cameraContainer">
+        <video id="video" autoplay playsinline style="display:none"></video>
+        <div class="live-badge" id="liveBadge">● LIVE</div>
+        <div class="placeholder" id="placeholder">
+            <div class="icon">📡</div>
+            <h2>Waiting for broadcast</h2>
+            <div class="room">Room: {{ room_name }}</div>
+            <p>On your phone, go to:<br><strong>{{ request.scheme }}://{{ request.get_host }}/stream/{{ room_name }}/broadcast/</strong><br>and tap Start Broadcast</p>
+        </div>
+    </div>
+
+    <div class="log" id="log">Click Connect to join the room.</div>
+
+    <div class="bottom-bar">
+        <div class="room-info">Room: <span>{{ room_name }}</span></div>
+        <div style="display:flex; gap:8px;">
+            <button class="btn btn-connect" id="btnConnect">Connect</button>
+            <button class="btn btn-disconnect" id="btnDisconnect">Disconnect</button>
+            <button class="btn btn-fs" id="btnFs">⛶ Fullscreen</button>
+        </div>
+    </div>
+
+    <script>
+        const roomName = "{{ room_name }}";
+        const wsUrl = `ws://${location.host}/ws/stream/${roomName}/`;
+
+        let ws, pc;
+
+        const video = document.getElementById('video');
+        const dot = document.getElementById('dot');
+        const statusText = document.getElementById('statusText');
+        const liveBadge = document.getElementById('liveBadge');
+        const placeholder = document.getElementById('placeholder');
+        const btnConnect = document.getElementById('btnConnect');
+        const btnDisconnect = document.getElementById('btnDisconnect');
+        const btnFs = document.getElementById('btnFs');
+        const log = document.getElementById('log');
+
+        const iceConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
+        function setLog(msg) { log.textContent = msg; }
+        function setStatus(text, state) {
+            statusText.textContent = text;
+            dot.className = 'status-dot' + (state ? ' ' + state : '');
+        }
+
+        function connect() {
+            setLog('Connecting to signaling server...');
+            setStatus('Connecting...', '');
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                setLog('Connected. Notifying broadcaster...');
+                setStatus('Waiting for broadcaster', 'connected');
+                ws.send(JSON.stringify({ type: 'viewer-ready' }));
+                btnConnect.style.display = 'none';
+                btnDisconnect.style.display = 'block';
+            };
+
+            ws.onmessage = async (event) => {
+                const msg = JSON.parse(event.data);
+
+                if (msg.type === 'offer') {
+                    setLog('Received offer, creating answer...');
+                    pc = new RTCPeerConnection(iceConfig);
+
+                    pc.ontrack = (e) => {
+                        video.srcObject = e.streams[0];
+                        video.style.display = 'block';
+                        placeholder.style.display = 'none';
+                        liveBadge.classList.add('show');
+                        setStatus('Live', 'live');
+                        setLog('Receiving live stream ✓');
+                    };
+
+                    pc.onicecandidate = (e) => {
+                        if (e.candidate) {
+                            ws.send(JSON.stringify({ type: 'candidate', candidate: e.candidate }));
+                        }
+                    };
+
+                    await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: msg.sdp }));
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    ws.send(JSON.stringify({ type: 'answer', type: 'answer', sdp: pc.localDescription.sdp }));
+                    setLog('Answer sent...');
+
+                } else if (msg.type === 'candidate') {
+                    try { await pc.addIceCandidate(new RTCIceCandidate(msg.candidate)); } catch(e) {}
+
+                } else if (msg.type === 'peer-left') {
+                    setLog('Broadcaster disconnected.');
+                    setStatus('Broadcaster offline', 'connected');
+                    video.style.display = 'none';
+                    placeholder.style.display = 'block';
+                    liveBadge.classList.remove('show');
+                    if (pc) { pc.close(); pc = null; }
+                }
+            };
+
+            ws.onclose = () => {
+                setLog('Disconnected.');
+                setStatus('Disconnected', '');
+                btnConnect.style.display = 'block';
+                btnDisconnect.style.display = 'none';
+                video.style.display = 'none';
+                placeholder.style.display = 'block';
+                liveBadge.classList.remove('show');
+            };
+        }
+
+        function disconnect() {
+            if (pc) { pc.close(); pc = null; }
+            if (ws) ws.close();
+        }
+
+        btnConnect.addEventListener('click', connect);
+        btnDisconnect.addEventListener('click', disconnect);
+        btnFs.addEventListener('click', () => {
+            const el = document.getElementById('cameraContainer');
+            if (el.requestFullscreen) el.requestFullscreen();
+        });
+
+        // Auto-connect on load
+        connect();
+    </script>
+</body>
+</html>

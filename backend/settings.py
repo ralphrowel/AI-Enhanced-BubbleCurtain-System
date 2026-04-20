@@ -48,12 +48,14 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_yasg",
     "corsheaders",
+    "channels",
+    "streaming",
     # local
     "accounts",
     "api",  
     "core",
     "imaging",
-    "sslserver",
+    ##"sslserver",
 ]
 
 MIDDLEWARE = [
@@ -183,3 +185,14 @@ JAZZMIN_UI_TWEAKS = {
 
 ### COnnector for Jazzmin file
 from backend.jazzmin_settings import JAZZMIN_SETTINGS
+
+ASGI_APPLICATION = "backend.asgi.application"
+
+CHANNEL_LAYERS = {
+     "default": {
+         "BACKEND": "channels_redis.core.RedisChannelLayer",
+         "CONFIG": {
+             "hosts": [("redis", 6379)],
+         },
+     },
+ }
