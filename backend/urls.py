@@ -8,6 +8,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from core.admin_views import ui_settings_view
 from django.http import FileResponse
+from core.views import home, dashboard
 
 import os
 
@@ -35,6 +36,8 @@ urlpatterns = [
     path("swagger/", schema_view.with_ui("swagger", cache_timeout=0)),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0)),
     path("", include("streaming.urls")),
+    path("dashboard/", dashboard, name="dashboard"),
+
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

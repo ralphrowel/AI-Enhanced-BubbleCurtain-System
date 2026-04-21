@@ -30,9 +30,15 @@
   border-color: #444 !important;
 }
 
+.info-box-icon i {
+    color: #fff !important;
+}
+
 /* Dark theme content area fix */
 [data-bs-theme="dark"] .content-wrapper,
 body.dark-mode .content-wrapper {
   background-color: #1a1a2e !important;
   color: #fff !important;
 }
+
+

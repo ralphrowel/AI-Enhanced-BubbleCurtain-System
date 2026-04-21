@@ -1,0 +1,4 @@
+/* Fix info-box icon colors */
+.info-box-icon i {
+    color: #fff !important;
+}

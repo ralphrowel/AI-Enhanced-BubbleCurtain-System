@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BubbleCurtain — Monitoring Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #060d14;
+            --surface: #0b1520;
+            --surface2: #0f1e2e;
+            --border: #1a3a5c;
+            --accent: #00d4ff;
+            --accent2: #00ff9d;
+            --danger: #ff4560;
+            --warn: #ffb547;
+            --text: #c8dff0;
+            --muted: #3a6080;
+            --mono: 'Share Tech Mono', monospace;
+            --sans: 'Exo 2', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Glow orbs */
+        body::after {
+            content: '';
+            position: fixed;
+            top: -200px; left: -200px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wrapper { position: relative; z-index: 1; }
+
+        /* ── HEADER ── */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 32px;
+            background: rgba(11,21,32,0.9);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 36px; height: 36px;
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--accent);
+            box-shadow: 0 0 12px rgba(0,212,255,0.3);
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes logoGlow {
+            0%, 100% { box-shadow: 0 0 12px rgba(0,212,255,0.3); }
+            50% { box-shadow: 0 0 24px rgba(0,212,255,0.6); }
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+
+        .logo-sub {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--accent2);
+        }
+
+        .live-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--accent2);
+            box-shadow: 0 0 8px var(--accent2);
+            animation: blink 1.5s ease-in-out infinite;
+        }
+
+        @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+        .nav-links {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-link {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--muted);
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-link:hover { background: var(--surface2); color: var(--accent); }
+        .nav-link.active { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+
+        /* ── MAIN ── */
+        main { padding: 32px; max-width: 1400px; margin: 0 auto; }
+
+        /* Section title */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .section-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* ── STAT CARDS ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .stat-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--accent);
+            opacity: 0.5;
+        }
+
+        .stat-card.danger::before { background: var(--danger); }
+        .stat-card.success::before { background: var(--accent2); }
+        .stat-card.warn::before { background: var(--warn); }
+
+        .stat-label {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .stat-value.accent { color: var(--accent); }
+        .stat-value.success { color: var(--accent2); }
+        .stat-value.danger { color: var(--danger); }
+        .stat-value.warn { color: var(--warn); }
+
+        .stat-sub {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .stat-icon {
+            position: absolute;
+            top: 16px; right: 16px;
+            font-size: 28px;
+            opacity: 0.15;
+        }
+
+        /* ── DETECTION RATE BAR ── */
+        .rate-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+            animation: fadeUp 0.5s 0.1s ease both;
+        }
+
+        .rate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 16px;
+        }
+
+        .rate-title {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .rate-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--warn);
+        }
+
+        .rate-bar-bg {
+            height: 8px;
+            background: var(--surface2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .rate-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--accent2), var(--warn));
+            transition: width 1s ease;
+            box-shadow: 0 0 12px rgba(255,181,71,0.4);
+        }
+
+        /* ── RECENT RESULTS TABLE ── */
+        .results-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            animation: fadeUp 0.5s 0.2s ease both;
+        }
+
+        .results-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .results-title {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .results-count {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--accent);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding: 12px 24px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+        }
+
+        td {
+            padding: 14px 24px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(26,58,92,0.5);
+            vertical-align: middle;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(0,212,255,0.03); }
+
+        .label-garbage {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,69,96,0.15);
+            color: var(--danger);
+            border: 1px solid rgba(255,69,96,0.3);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .label-clean {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0,255,157,0.1);
+            color: var(--accent2);
+            border: 1px solid rgba(0,255,157,0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .label-failed {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(58,96,128,0.2);
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .confidence-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .conf-track {
+            width: 80px;
+            height: 4px;
+            background: var(--surface2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .conf-fill {
+            height: 100%;
+            border-radius: 2px;
+            background: var(--accent);
+        }
+
+        .conf-fill.high { background: var(--accent2); }
+        .conf-fill.low { background: var(--muted); }
+
+        .conf-text {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text);
+            min-width: 40px;
+        }
+
+        .device-badge {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--accent);
+            background: rgba(0,212,255,0.08);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .time-text {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .thumb {
+            width: 48px;
+            height: 36px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state p { font-size: 13px; letter-spacing: 1px; }
+
+        /* ── QUICK ACTIONS ── */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 32px;
+            animation: fadeUp 0.5s 0.15s ease both;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 20px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent);
+            background: rgba(0,212,255,0.05);
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .action-btn .icon { font-size: 24px; }
+        .action-btn .label { font-size: 12px; font-weight: 600; letter-spacing: 0.5px; }
+        .action-btn .sub { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+
+        /* Auto-refresh countdown */
+        .refresh-badge {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--muted);
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+
+    <header>
+        <div class="logo">
+            <div class="logo-icon">🫧</div>
+            <div>
+                <div class="logo-text">BubbleCurtain</div>
+                <div class="logo-sub">AI Monitoring System</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="live-indicator">
+                <div class="live-dot"></div>
+                SYSTEM ONLINE
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link active">Dashboard</a>
+                <a href="/capture/" class="nav-link">Capture</a>
+                <a href="/stream/room1/broadcast/" class="nav-link">Broadcast</a>
+                <a href="/stream/room1/view/" class="nav-link">Live View</a>
+                <a href="/admin/" class="nav-link">Admin</a>
+            </div>
+            <span class="refresh-badge" id="refreshBadge">↻ 30s</span>
+        </div>
+    </header>
+
+    <main>
+
+        <!-- Stats -->
+        <div class="section-header">
+            <span class="section-title">System Overview</span>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Captures</div>
+                <div class="stat-value accent">{{ total_images }}</div>
+                <div class="stat-sub">Images processed</div>
+                <div class="stat-icon">📷</div>
+            </div>
+            <div class="stat-card danger">
+                <div class="stat-label">Garbage Detected</div>
+                <div class="stat-value danger">{{ garbage_detected }}</div>
+                <div class="stat-sub">Positive detections</div>
+                <div class="stat-icon">🗑️</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-label">Clear / No Garbage</div>
+                <div class="stat-value success">{{ no_garbage }}</div>
+                <div class="stat-sub">Clean captures</div>
+                <div class="stat-icon">✅</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active Devices</div>
+                <div class="stat-value">{{ total_devices }}</div>
+                <div class="stat-sub">Registered devices</div>
+                <div class="stat-icon">📡</div>
+            </div>
+            <div class="stat-card warn">
+                <div class="stat-label">Classified</div>
+                <div class="stat-value warn">{{ completed }}</div>
+                <div class="stat-sub">Successfully analyzed</div>
+                <div class="stat-icon">🤖</div>
+            </div>
+        </div>
+
+        <!-- Detection Rate -->
+        <div class="rate-card">
+            <div class="rate-header">
+                <span class="rate-title">Garbage Detection Rate</span>
+                <span class="rate-value">{{ detection_rate }}%</span>
+            </div>
+            <div class="rate-bar-bg">
+                <div class="rate-bar-fill" style="width: {{ detection_rate }}%"></div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="section-header">
+            <span class="section-title">Quick Actions</span>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="actions-grid">
+            <a href="/capture/" class="action-btn">
+                <span class="icon">📸</span>
+                <span class="label">Capture Station</span>
+                <span class="sub">Take photo</span>
+            </a>
+            <a href="/stream/room1/broadcast/" class="action-btn">
+                <span class="icon">📡</span>
+                <span class="label">Broadcast</span>
+                <span class="sub">Phone camera</span>
+            </a>
+            <a href="/stream/room1/view/" class="action-btn">
+                <span class="icon">🖥️</span>
+                <span class="label">Live View</span>
+                <span class="sub">Watch stream</span>
+            </a>
+            <a href="/admin/imaging/classificationresult/" class="action-btn">
+                <span class="icon">🤖</span>
+                <span class="label">All Results</span>
+                <span class="sub">Admin panel</span>
+            </a>
+            <a href="/admin/api/device/" class="action-btn">
+                <span class="icon">⚙️</span>
+                <span class="label">Devices</span>
+                <span class="sub">Manage</span>
+            </a>
+        </div>
+
+        <!-- Recent Results -->
+        <div class="section-header">
+            <span class="section-title">Recent Classifications</span>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="results-card">
+            <div class="results-header">
+                <span class="results-title">Latest 10 Results</span>
+                <span class="results-count">{{ recent_results|length }} shown</span>
+            </div>
+
+            {% if recent_results %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Detection</th>
+                        <th>Confidence</th>
+                        <th>Device</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in recent_results %}
+                    <tr>
+                        <td>
+                            {% if result.raw_image.image %}
+                            <img src="/media/{{ result.raw_image.image }}" class="thumb" alt="capture">
+                            {% else %}
+                            <span style="color:var(--muted);font-size:11px;">No image</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if "Garbage Detected" in result.label %}
+                            <span class="label-garbage">⚠ {{ result.label }}</span>
+                            {% elif result.status == "failed" %}
+                            <span class="label-failed">✗ {{ result.label }}</span>
+                            {% else %}
+                            <span class="label-clean">✓ {{ result.label }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="confidence-bar">
+                                <div class="conf-track">
+                                    <div class="conf-fill {% if result.confidence > 0.7 %}high{% elif result.confidence < 0.3 %}low{% endif %}"
+                                         style="width: {{ result.confidence|floatformat:0 }}%"></div>
+                                </div>
+                                <span class="conf-text">{{ result.confidence|floatformat:1 }}%</span>
+                            </div>
+                        </td>
+                        <td><span class="device-badge">{{ result.device }}</span></td>
+                        <td><span class="time-text">{{ result.classified_at|date:"M d, H:i" }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon">📭</div>
+                <p>No classifications yet — go capture something!</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </main>
+</div>
+
+<script>
+    // Auto-refresh countdown
+    let seconds = 30;
+    const badge = document.getElementById('refreshBadge');
+    setInterval(() => {
+        seconds--;
+        badge.textContent = `↻ ${seconds}s`;
+        if (seconds <= 0) {
+            location.reload();
+        }
+    }, 1000);
+
+    // Animate confidence bars on load
+    document.querySelectorAll('.conf-fill').forEach(el => {
+        const w = el.style.width;
+        el.style.width = '0';
+        setTimeout(() => { el.style.transition = 'width 0.8s ease'; el.style.width = w; }, 200);
+    });
+</script>
+</body>
+</html>

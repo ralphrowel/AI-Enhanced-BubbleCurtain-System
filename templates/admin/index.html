@@ -1,72 +1,278 @@
 {% extends "admin/base_site.html" %}
 {% load i18n static jazzmin %}
 {% get_jazzmin_ui_tweaks as jazzmin_ui %}
-
 {% block bodyclass %}{{ block.super }} dashboard{% endblock %}
-
-{% block content_title %} {% trans 'Dashboard' %} {% endblock %}
-
+{% block content_title %}{% trans 'Dashboard' %}{% endblock %}
 {% block breadcrumbs %}
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a></li>
-        <li class="breadcrumb-item">{% trans 'Dashboard' %}</li>
-    </ol>
+<ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a></li>
+    <li class="breadcrumb-item active">{% trans 'Dashboard' %}</li>
+</ol>
 {% endblock %}
 
 {% block content %}
-    <!-- Capture Station Button -->
-    <div style="margin-bottom: 20px;">
-        <a href="/capture/" class="btn btn-primary btn-lg" style="
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-        ">
-            <i class="fas fa-video"></i> Open Capture Station
-        </a>
+
+<script>
+    setTimeout(function() { location.reload(); }, 15000);
+</script>
+
+{% if unread_alerts %}
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="callout callout-danger" style="position:relative; padding-right:50px;">
+            <button type="button" onclick="this.parentElement.parentElement.parentElement.style.display='none';"
+                style="position:absolute; top:8px; right:12px; background:none; border:none; font-size:22px; cursor:pointer; color:#721c24; line-height:1;">
+                &times;
+            </button>
+            <h5><i class="fas fa-exclamation-triangle mr-2"></i>
+                {{ unread_alerts }} unread garbage alert{{ unread_alerts|pluralize }}!
+            </h5>
+            {% for alert in recent_alerts %}
+                <p class="mb-1" style="font-size:13px;">🚨 {{ alert.message }} — <small class="text-muted">{{ alert.created_at|date:"M d, H:i" }}</small></p>
+            {% endfor %}
+            <a href="/admin/alerts/garbagealert/" class="btn btn-sm btn-danger mt-1">View All Alerts</a>
+        </div>
     </div>
+</div>
+{% endif %}
 
-    {% get_side_menu using="app_list" as dashboard_list %}
-    {% if dashboard_list %}
-        {% widthratio dashboard_list|length 2 1 as middle %}
-    {% endif %}
-
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="row">
-                {% for app in dashboard_list %}
-                    <div class="col-lg-6">
-                        <div class="card mb-3">
-                            <div class="card-header">
-                                <h5 class="m-0">{{ app.name }}</h5>
-                            </div>
-                            <div class="card-body p-0">
-                                <table class="table table-hover mb-0">
-                                    {% for model in app.models %}
-                                        <tr>
-                                            <td>
-                                                {% if model.url %}<a href="{{ model.url }}">{{ model.name }}</a>{% else %}{{ model.name }}{% endif %}
-                                            </td>
-                                            <td class="text-right" style="white-space: nowrap;">
-                                                {% if model.add_url %}
-                                                    <a href="{{ model.add_url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.success }} addlink">{% trans 'Add' %}</a>
-                                                {% endif %}
-                                                {% if model.url %}
-                                                    {% if model.view_only %}
-                                                        <a href="{{ model.url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.info }} viewlink">{% trans 'View' %}</a>
-                                                    {% else %}
-                                                        <a href="{{ model.url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.info }} changelink">{% if model.custom %}{% trans 'Go' %}{% else %}{% trans 'Change' %}{% endif %}</a>
-                                                    {% endif %}
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
+<!-- ── STAT CARDS ── -->
+<div class="row mb-3">
+    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-info elevation-1"><i class="fas fa-camera"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Total Captures</span>
+                <span class="info-box-number">{{ stats_total_images }}</span>
+                <span class="info-box-text text-muted" style="font-size:11px;">Images processed</span>
             </div>
         </div>
     </div>
+
+    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-trash"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Garbage Detected</span>
+                <span class="info-box-number">{{ stats_garbage }}</span>
+                <span class="info-box-text text-muted" style="font-size:11px;">Positive detections</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-success elevation-1"><i class="fas fa-check-circle"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Clean / No Garbage</span>
+                <span class="info-box-number">{{ stats_clean }}</span>
+                <span class="info-box-text text-muted" style="font-size:11px;">Clear captures</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-microchip"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Devices</span>
+                <span class="info-box-number">{{ stats_total_devices }}</span>
+                <span class="info-box-text text-muted" style="font-size:11px;">Registered</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── DETECTION RATE + QUICK ACTIONS ── -->
+<div class="row mb-3">
+
+    <!-- Detection Rate Card -->
+    <div class="col-lg-6 col-12">
+        <div class="card shadow-sm">
+            <div class="card-header border-0">
+                <h3 class="card-title"><i class="fas fa-chart-pie mr-2 text-info"></i>Garbage Detection Rate</h3>
+                <div class="card-tools">
+                    <span class="badge badge-info badge-pill">{{ stats_completed }} classified</span>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+                <div class="d-flex justify-content-between align-items-baseline mb-2">
+                    <span class="text-muted" style="font-size:13px;">Detection rate across all captures</span>
+                    <span class="h4 font-weight-bold text-warning">{{ stats_detection_rate }}%</span>
+                </div>
+                <div class="progress progress-sm mb-3">
+                    <div class="progress-bar bg-warning" style="width: {{ stats_detection_rate }}%"
+                         role="progressbar" aria-valuenow="{{ stats_detection_rate }}"
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="text-danger font-weight-bold h5 mb-0">{{ stats_garbage }}</div>
+                        <small class="text-muted">Garbage</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-success font-weight-bold h5 mb-0">{{ stats_clean }}</div>
+                        <small class="text-muted">Clean</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-info font-weight-bold h5 mb-0">{{ stats_total_images }}</div>
+                        <small class="text-muted">Total</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Card -->
+    <div class="col-lg-6 col-12">
+        <div class="card shadow-sm">
+            <div class="card-header border-0">
+                <h3 class="card-title"><i class="fas fa-bolt mr-2 text-warning"></i>Quick Actions</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 mb-2">
+                        <a href="/capture/" class="btn btn-info btn-block elevation-1">
+                            <i class="fas fa-camera mr-2"></i>Capture Station
+                        </a>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <a href="/dashboard/" class="btn btn-primary btn-block elevation-1">
+                            <i class="fas fa-chart-bar mr-2"></i>Full Dashboard
+                        </a>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <a href="/stream/room1/broadcast/" class="btn btn-success btn-block elevation-1">
+                            <i class="fas fa-broadcast-tower mr-2"></i>Broadcast
+                        </a>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <a href="/stream/room1/view/" class="btn btn-warning btn-block elevation-1">
+                            <i class="fas fa-desktop mr-2"></i>Live View
+                        </a>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <a href="/admin/imaging/classificationresult/" class="btn btn-danger btn-block elevation-1">
+                            <i class="fas fa-robot mr-2"></i>AI Results
+                        </a>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <a href="/admin/api/device/" class="btn btn-secondary btn-block elevation-1">
+                            <i class="fas fa-microchip mr-2"></i>Devices
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── EXISTING APP LIST ── -->
+{% get_side_menu using="app_list" as dashboard_list %}
+<div class="row">
+    <div class="col-12">
+        <div class="row">
+            {% for app in dashboard_list %}
+            <div class="col-lg-6">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header border-0">
+                        <h3 class="card-title">{{ app.name }}</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            {% for model in app.models %}
+                            <tr>
+                                <td>
+                                    {% if model.url %}<a href="{{ model.url }}">{{ model.name }}</a>{% else %}{{ model.name }}{% endif %}
+                                </td>
+                                <td class="text-right" style="white-space:nowrap;">
+                                    {% if model.add_url %}
+                                        <a href="{{ model.add_url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.success }} addlink">{% trans 'Add' %}</a>
+                                    {% endif %}
+                                    {% if model.url %}
+                                        {% if model.view_only %}
+                                            <a href="{{ model.url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.info }} viewlink">{% trans 'View' %}</a>
+                                        {% else %}
+                                            <a href="{{ model.url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.info }} changelink">
+                                                {% if model.custom %}{% trans 'Go' %}{% else %}{% trans 'Change' %}{% endif %}
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- ── RECENT CLASSIFICATIONS ── -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header border-0">
+                <h3 class="card-title"><i class="fas fa-robot mr-2 text-info"></i>Recent Classifications</h3>
+                <div class="card-tools">
+                    <a href="/admin/imaging/classificationresult/" class="btn btn-sm btn-info">View All</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:60px">Image</th>
+                            <th>Detection</th>
+                            <th>Confidence</th>
+                            <th>Device</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in recent_results %}
+                        <tr>
+                            <td>
+                                {% if result.raw_image.image %}
+                                <img src="/media/{{ result.raw_image.image }}" style="width:48px;height:36px;object-fit:cover;border-radius:4px;" alt="capture">
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if "Garbage Detected" in result.label %}
+                                <span class="badge badge-danger">⚠ {{ result.label }}</span>
+                                {% elif result.status == "failed" %}
+                                <span class="badge badge-secondary">✗ {{ result.label }}</span>
+                                {% else %}
+                                <span class="badge badge-success">✓ {{ result.label }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="progress progress-sm" style="width:80px;display:inline-block;vertical-align:middle;">
+                                    <div class="progress-bar {% if result.confidence > 0.7 %}bg-success{% elif result.confidence < 0.3 %}bg-secondary{% else %}bg-info{% endif %}"
+                                         style="width:{{ result.confidence|floatformat:0 }}%"></div>
+                                </div>
+                                <small class="ml-1">{{ result.confidence|floatformat:1 }}%</small>
+                            </td>
+                            <td><small class="text-muted">{{ result.device }}</small></td>
+                            <td><small class="text-muted">{{ result.classified_at|date:"M d, H:i" }}</small></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                No classifications yet — go capture something!
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
